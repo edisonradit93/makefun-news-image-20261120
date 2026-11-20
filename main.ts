@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as process from 'node:process';
 import * as crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 const MAX_IMAGE_BYTES = 1048576; // 1 MB limit
 
@@ -29,8 +30,8 @@ export function verifyIntegrity(sourcePath: string, destinationPath: string): st
 }
 
 export function dispatchImage(): DispatchResult {
-  const currentDir = process.cwd();
-  const sourcePath = path.resolve(currentDir, 'entry.png');
+  const baseDir = process.env.MAKEFUN_BOT_DIR || path.dirname(fileURLToPath(import.meta.url));
+  const sourcePath = path.resolve(baseDir, 'entry.png');
 
   if (!fs.existsSync(sourcePath)) {
     throw new Error(`Source image not found at: ${sourcePath}`);
@@ -41,7 +42,7 @@ export function dispatchImage(): DispatchResult {
     throw new Error(`File size ${stat.size} exceeds maximum allowable size of ${MAX_IMAGE_BYTES} bytes`);
   }
 
-  const outputDir = process.env.MAKEFUN_OUTPUT_DIR || path.resolve(currentDir, 'output');
+  const outputDir = process.env.MAKEFUN_OUTPUT_DIR || (process.platform === 'win32' ? path.resolve(baseDir, 'output') : '/output');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
